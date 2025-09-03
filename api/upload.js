@@ -1,6 +1,7 @@
 import formidable from "formidable";
 import fs from "fs";
 import fetch from "node-fetch";
+import FormData from "form-data"; // penting!
 
 export const config = {
   api: {
@@ -8,7 +9,7 @@ export const config = {
   },
 };
 
-export default async (req, res) => {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
     return res.status(405).json({ error: "Method not allowed" });
   }
@@ -22,19 +23,18 @@ export default async (req, res) => {
     const stream = fs.createReadStream(file.filepath);
 
     try {
+      const fd = new FormData();
+      fd.append("file", stream, file.originalFilename);
+
       const uploadRes = await fetch("https://file.io", {
         method: "POST",
-        body: (() => {
-          const fd = new FormData();
-          fd.append("file", stream, file.originalFilename);
-          return fd;
-        })()
+        body: fd,
       });
 
       const data = await uploadRes.json();
       return res.status(200).json({ url: data.link || null });
     } catch (error) {
-      return res.status(500).json({ error: "Upload gagal" });
+      return res.status(500).json({ error: "Upload gagal", detail: error.message });
     }
   });
-};
+  }
