@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Konversi File ke URL</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Konversi File ke URL 🔗</h1>
+    <form id="uploadForm">
+      <input type="file" id="fileInput" required />
+      <button type="submit">Upload & Dapatkan Link</button>
+    </form>
+    <div id="result"></div>
+  </div>
+
+  <script>
+    const form = document.getElementById("uploadForm");
+    const fileInput = document.getElementById("fileInput");
+    const result = document.getElementById("result");
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const file = fileInput.files[0];
+      if (!file) return alert("Pilih file dulu!");
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      result.innerHTML = "⏳ Uploading...";
+
+      try {
+        const res = await fetch("/api/upload", {
+          method: "POST",
+          body: formData
+        });
+        const data = await res.json();
+
+        if (data.url) {
+          result.innerHTML = `
+            ✅ File berhasil diupload!<br>
+            <a href="${data.url}" target="_blank">${data.url}</a>
+          `;
+        } else {
+          result.innerHTML = "❌ Gagal upload.";
+        }
+      } catch (err) {
+        result.innerHTML = "⚠️ Error: " + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
